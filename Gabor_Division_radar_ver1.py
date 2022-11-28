@@ -198,7 +198,6 @@ while i < Loop_MAX - 1:
     # Option: Replace with the t_d_hat of maximum CFD 
     # t_d_hat[i+1] = t_d_hat[i + 1][np.argmax(CFD)] 
 
-    print("Half of estimation are replaced", t_d_hat[i+1])
     for m in range(Nf):
         cTD[m] = np.max ( abs ( TDcorrelator(r, uTD[m], t_d_hat[i+1][m] ) ) )
         #print('cTD[{a}]={b}'.format( a=m, b=cTD[m] ))        
