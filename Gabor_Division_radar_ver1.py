@@ -1,7 +1,7 @@
 ### Phase Updating Loop in GDSS
 ### Algorithm 2 in SITA2022 
 ### Written by Yutaka Jitsumatsu 
-### last edit 2022 Nov. 26 
+### last edit 2022 Nov. 28 
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +9,7 @@ from scipy.linalg import hadamard
 from scipy.stats import rankdata
 
 Loop_MAX = 20 # Max number of Loops of PUL 
-snr_in_dB = 20; 
+snr_in_dB = 20
 snr = 10**(snr_in_dB/10);
 
 L = 1024 # the number of samples 
@@ -193,12 +193,11 @@ while i < Loop_MAX - 1:
         CFD[n] = np.max ( abs ( FDcorrelator(R, UFD[n], f_D_hat[i][n] ) ) )
         # print('CFD[{a}]={b}'.format( a=n, b=CFD[n] ))
         t_d_hat[i + 1][n] = np.argmax ( abs ( FDcorrelator(R, UFD[n], f_D_hat[i][n] ) ) )
-    rnk = rankdata(CFD) # the index of ranking of CFD 
-    upper = np.where(rnk>Nt//2); lower = np.where(rnk<=Nt//2) 
-    # replace the t_d_hat of lower ranking with that of upper ranking.
     print("t_d_hat from correlator output ",t_d_hat[i+1])
-    t_d_hat[i + 1][lower] = t_d_hat[i + 1][upper]; 
-    # t_d_hat[i+1] = t_d_hat[i + 1][np.argmax(CFD)] # replace with the t_d_hat of maximum CFD 
+
+    # Option: Replace with the t_d_hat of maximum CFD 
+    # t_d_hat[i+1] = t_d_hat[i + 1][np.argmax(CFD)] 
+
     print("Half of estimation are replaced", t_d_hat[i+1])
     for m in range(Nf):
         cTD[m] = np.max ( abs ( TDcorrelator(r, uTD[m], t_d_hat[i+1][m] ) ) )
@@ -206,17 +205,15 @@ while i < Loop_MAX - 1:
         f_D_hat[i + 1][m] = np.argmax ( abs ( TDcorrelator(r, uTD[m], t_d_hat[i+1][m] ) ) )
         if f_D_hat[i + 1][m] > L//2:
             f_D_hat[i + 1][m] -= L
-    rnk = rankdata(cTD) # the index of ranking of CFD 
-    upper = np.where(rnk>Nf//2); lower = np.where(rnk<=Nf//2) 
-    # replace the t_d_hat of lower ranking with that of upper ranking.
     print("f_D_hat from correlator output ",f_D_hat[i+1])
-    f_D_hat[i + 1][lower] = f_D_hat[i + 1][upper]; 
-    print("Half of estimation are replaced",f_D_hat[i+1])
-    #f_D_hat[i+1] = f_D_hat[i + 1][np.argmax(cTD)]
+    # Option: Replace with the f_D_hat of maximum cTD 
+    # f_D_hat[i+1] = f_D_hat[i + 1][np.argmax(cTD)]
+
+    n_hat = np.argmax(cTD);
 
     i = i + 1
-    print(np.linalg.norm( t_d_hat[i] - t_d_hat[i-1]) , np.linalg.norm( f_D_hat[i] - f_D_hat[i-1] ))
-    if np.linalg.norm( t_d_hat[i] - t_d_hat[i-1]) < 1 and np.linalg.norm( f_D_hat[i] - f_D_hat[i-1] ) < 1:
+    print( abs( t_d_hat[i][n_hat] - t_d_hat[i-1][n_hat]) , abs( f_D_hat[i][n_hat] - f_D_hat[i-1][n_hat] ) )
+    if abs( t_d_hat[i][n_hat] - t_d_hat[i-1][n_hat]) < 1 and abs( f_D_hat[i][n_hat] - f_D_hat[i-1][n_hat] ) < 1:
         itr = i-1;
         break
 
@@ -234,13 +231,4 @@ arr = np.array([ t_d_hat[itr], f_D_hat[itr]]).T
 unique, freq = np.unique(arr, return_counts=True, axis=0)
 print("The estimate is", unique[ np.argmax( freq ) ] )
 print("Estimated by", np.max( freq ), "out of ", Nt, "correlators")
-
-
-# roll_Z = np.roll(Z, L//2)
-# fig1 = plt.figure()
-# plt.plot(i,abs(roll_Z) )
-
-
-
-
 
